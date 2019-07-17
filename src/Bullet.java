@@ -1,16 +1,24 @@
 public class Bullet  extends FlyingObject{
-    private int speed=5;
-    public Bullet(int x,int y){
-        this.x=x;
-        this.y=y;
+    private int Speed=20;
+    public double Tox,Toy;
+    public double oriX,oriY;
+    double xSpeed,ySpeed;
+
+    public Bullet(double fromx,double fromy,double tox,double toy){
+        oriX=this.x=fromx;
+        oriY=this.y=fromy;
         this.image=Main.bullet;
+        Tox=tox;Toy=toy;
     }
 
     @Override
     public void step(){
-        x+=speed;//平飞
+        xSpeed=Speed*(Tox-oriX)/(Math.abs(Tox-oriX)+Math.abs(Toy-oriY));
+        ySpeed=Speed*(Toy-oriY)/(Math.abs(Tox-oriX)+Math.abs(Toy-oriY));
+        x+=xSpeed;
+        y+=ySpeed;
+     //   System.err.println("aaaaa"+Tox+' '+Toy+' '+oriX+' '+oriY+' '+x+' '+y);
     }
-
     @Override
     public boolean outOfBounds(){
         return x>width;

@@ -4,6 +4,9 @@ public class Hero extends Figure{
 
     private BufferedImage[] images={};//主人公图片
     private int index=0;
+    public double toX,toY;
+    public double oriX,oriY;
+    public double sX,sY;//子弹射向哪里
 
     private int life;
     private int money;
@@ -17,31 +20,31 @@ public class Hero extends Figure{
         images=new BufferedImage[]{Main.hero0,Main.hero1};
         width=image.getWidth();
         height=image.getHeight();
-        x=150;y=300;
+        oriX=x=150;oriY=y=300;
     }
 
     public void addLife(){life++;}
     public int getLife(){return life;}
+    public void setmoney(int mo){money=mo;}
+    public int getMoney(){return money;}
 
     @Override
     public boolean outOfBound(){return false;}
 
     @Override
-    public void step(){//是做动画用的
-     /*   if(images.length>0){
-            image=images[index++/10%images.length];
-        }*/
-    }
-
-    public void moveTo(int x,int y){
-
-        this.x = x - width/2;
-        this.y = y - height/2;
+    public void step(){
+        if(!(x<toX&&x+width>toX&&y<toY&&y+height>toY)){
+            double xSpeed=(double)8*(toX-oriX)/(Math.abs(toX-oriX)+Math.abs(toY-oriY));
+            double ySpeed=(double)8*(toY-oriY)/(Math.abs(toX-oriX)+Math.abs(toY-oriY));
+            x+=xSpeed;
+            y+=ySpeed;
+        }
+      //  System.err.println(oriX+' '+oriY+' '+toY+' '+toX);
     }
 
     public Bullet[] shoot(){
         Bullet []bullets=new Bullet[1];
-        bullets[0]=new Bullet(x+20,y-height/2);
+        bullets[0]=new Bullet(x,y,sX,sY);
         return bullets;
     }
     public void skill1(){//发射技能1
@@ -55,6 +58,7 @@ public class Hero extends Figure{
     public void skill3(){//发射技能3
 
     }
+
     /***碰撞算法***/
     //用在主人公碰到怪物就减一条命
     public boolean hit(Monster other){

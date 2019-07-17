@@ -37,11 +37,13 @@ public class Main extends JPanel {
     public static BufferedImage hero1;
     public static BufferedImage pause;
     public static BufferedImage gameover;
+    public static BufferedImage fire;//怪物喷的火球
 
     private Bullet[] bullets ={};//子弹数组
     private Hero myhero =new Hero();//主人公
     private Monster[] monsters={};//怪物数组
     private Fruit[] fruits={};//水果数组
+    private Fire[] fires={};//火球数组
 
     static {
         try {
@@ -50,12 +52,11 @@ public class Main extends JPanel {
             monster=ImageIO.read(Main.class.getResource("monster.png"));
             fruit=ImageIO.read(Main.class.getResource("fruit.png"));
             bullet=ImageIO.read(Main.class.getResource("bullet.png"));
-            hero0=ImageIO.read(Main.class.getResource("hero.JPG"));
+            hero0=ImageIO.read(Main.class.getResource("hero.png"));
          //   hero1=ImageIO.read(Main.class.getResource("hero1.JPG"));
             pause=ImageIO.read(Main.class.getResource("pause.png"));
             gameover=ImageIO.read(Main.class.getResource("gameover.png"));
-
-
+            fire=ImageIO.read(Main.class.getResource("fire.png"));
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -69,6 +70,7 @@ public class Main extends JPanel {
         paintBullets(g); // 画子弹
         paintMonsters(g);//画怪物
         paintFruit(g);//画水果
+        paintFire(g);
         paintScore(g); // 画分数
         paintState(g); // 画游戏状态
     }
@@ -81,8 +83,7 @@ public class Main extends JPanel {
     public void paintBullets(Graphics g) {
         for (int i = 0; i < bullets.length; i++) {
             Bullet b = bullets[i];
-            g.drawImage(b.getImage(), b.getX() - b.getWidth() / 2, b.getY(),
-                    null);
+            g.drawImage(b.getImage(), (int)b.getX(), (int)b.getY(), null);
         }
     }
     public void paintMonsters(Graphics g){
@@ -95,7 +96,13 @@ public class Main extends JPanel {
     public void paintFruit(Graphics g){
         for(int i=0;i<fruits.length;i++){
             Fruit fru=fruits[i];
-            g.drawImage(fru.getImage(),fru.getX(),fru.getY(),null);
+            g.drawImage(fru.getImage(),(int)fru.getX(),(int)fru.getY(),null);
+        }
+    }
+    public void paintFire(Graphics g){
+        for(int i=0;i<fires.length;i++){
+            Fire fir=fires[i];
+            g.drawImage(fir.image,(int)fir.getX(),(int)fir.getY(),null);
         }
     }
 
@@ -168,19 +175,20 @@ public class Main extends JPanel {
                         break;
                     case RUNNING://运行状态下鼠标点哪里，主人公移到哪里
                         if(e.getButton()==e.BUTTON1) {//左键移动主人公
-                            int x = e.getX();
-                            int y = e.getY();
-                            //update()
-                            myhero.moveTo(x, y);
+                            myhero.toX = e.getX();
+                            myhero.toY = e.getY();
+                            myhero.oriX=myhero.getX();
+                            myhero.oriY=myhero.getY();
+                        //    System.err.println(myhero.toX+" "+myhero.toY+' '+myhero.oriX+' '+myhero.oriY);
                         }
                         if(e.getButton()==e.BUTTON3){//右键发子弹
-                            int x=e.getX();
-                            int y=e.getY();
-                            update();
+                            ifshoot=true;
+                            myhero.sX = e.getX();
+                            myhero.sY= e.getY();
                         }
                         break;
                     case GAME_OVER: // 游戏结束，清理现场
-                        monsters= new Monster[0]; // 清空飞行物
+                    //    monsters= new Monster[0]; // 清空飞行物
                         bullets = new Bullet[0]; // 清空子弹
                         myhero = new Hero(); // 重新创建主人公
                         fruits =new Fruit[0];//清空水果
@@ -200,6 +208,7 @@ public class Main extends JPanel {
                 if(state==RUNNING){
                     enterAction(); // 怪兽入场,水果入场
                     stepAction(); // 走一步
+                    shootAction();//打
                     bangAction(); // 子弹打飞行物
                     outOfBoundsAction(); // 删除越界飞行物及子弹
                     checkGameOverAction(); // 检查游戏结束
@@ -211,11 +220,12 @@ public class Main extends JPanel {
 
     int monsterindex=0;//怪物入场计数(计时）
     int fruitnum=0;//水果入场计数
+    int fruitindex=0;
+    //怪物过2s，入场一次
 
-    //怪物过5s，入场一次
     public void enterAction(){
         monsterindex++;
-        if(monsterindex%500==0){//5s 生成两个怪物
+        if(monsterindex%200==0){//2s 生成一个怪物
              Monster obj=new Monster();//随机生成一个怪物
              monsters=Arrays.copyOf(monsters,monsters.length+1);
              monsters[monsters.length-1]=obj;
@@ -236,31 +246,97 @@ public class Main extends JPanel {
             Monster mon=monsters[i];
             mon.step();
         }
-        for(int i=0;i<fruits.length;i++){
-            Fruit fru=fruits[i];
-            fru.step();
-        }
-    }
-
-    int shootIndex =0;
-    public void shootTo(int x,int y){//点一下右键发五颗子弹
-        if(shootIndex<5*30){
-            shootIndex++;
-            if(shootIndex%30==0){//300ms发一颗
-                Bullet[] bu=myhero.shoot();//主人公打出子弹
-                bullets=Arrays.copyOf(bullets,bullets.length+bu.length);//扩容
-                System.arraycopy(bu,0,bullets,bullets.length-bu.length,bu.length);//追加数组
+        fruitindex++;
+        if(fruitindex%10==0){
+            for(int i=0;i<fruits.length;i++){
+                Fruit fru=fruits[i];
+                fru.step();
             }
         }
+        myhero.step();
     }
-    public void bangAction(){
+    boolean ifshoot=false;
+    public void shootAction(){
+        if(ifshoot){//主人公点一下右键发一颗子弹
+            Bullet[] bs=myhero.shoot();
+            bullets = Arrays.copyOf(bullets, bullets.length + bs.length); // 扩容
+            System.arraycopy(bs, 0, bullets, bullets.length - bs.length,
+                    bs.length); // 追加数组
+            ifshoot=false;
+        }
+        for(int i=0;i<bullets.length;i++){
+            bullets[i].step();
+        }
 
+        //怪物一直朝8个方向放火球
+        if(monsterindex%200==0) {
+            Fire[] fs = monsters[monsters.length - 1].shoot();
+            fires = Arrays.copyOf(fires, fires.length + fs.length);
+            System.arraycopy(fs, 0, fires, fires.length - fs.length, fs.length);
+        }
+        for (int i = 0; i < fires.length; i++) {
+            fires[i].step();
+        }
+    }
+
+    //碰撞检测
+    public void bangAction(){
+        for(int i=0;i<bullets.length;i++){//检查子弹是否碰到怪和水果
+            Bullet b=bullets[i];
+            bangmonster(b);
+            bangfruit(b);
+        }
+        //检测主人公是否碰到怪和怪发出的技能
     }
     public void outOfBoundsAction(){
 
     }
 
     public void checkGameOverAction(){
+
+    }
+
+    public void bangmonster(Bullet bullet){//现在只看怪有没有被打到，不看水果
+        int index=-1;
+        for (int i=0;i<monsters.length;i++){//之后要写通过边界检查删掉出界monster！！！
+            Monster obj=monsters[i];
+            if(obj.shootBy(bullet)){//判断是否击中
+                index=i;
+                break;
+            }
+        }
+        if(index!=-1){//有击中怪
+            monsters=Arrays.copyOf(monsters,monsters.length-1);//删掉这个怪
+            int tmp=myhero.getMoney()+20;
+            myhero.setmoney(tmp);//打中怪加20分
+            score+=20;
+        }
+    }
+
+    public void bangfruit(Bullet bullet){
+        int index=-1;
+        for(int i=0;i<fruits.length;i++){
+            Fruit fruit=fruits[i];
+            if(fruit.shootBy(bullet)){
+                index=i;
+                break;
+            }
+        }
+        if(index!=-1){
+            Fruit tmp=fruits[index];
+            fruits[index]=fruits[fruits.length-1];
+            fruits[fruits.length-1]=tmp;
+
+            fruits=Arrays.copyOf(fruits,fruits.length-1);
+            myhero.addLife();
+        }
+    }
+
+    public void banghero(Fire fire){//检查火球有没有撞上主人公,扣血
+
+    }
+
+    public void H_bang_M(Hero hero){//检查主人公有没有撞上怪物，减命
 
     }
 

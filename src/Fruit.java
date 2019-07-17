@@ -1,9 +1,10 @@
 import java.util.Random;
 
 public class Fruit extends FlyingObject{
-    private int xSpeed;
-    private int ySpeed;
+    private double Speed;
     private int awardType;//1-奖励money；2-奖励life；3-奖励火力
+    private double Tox,Toy;
+    private double oriX,oriY;
 
     public Fruit(){
 
@@ -12,10 +13,10 @@ public class Fruit extends FlyingObject{
         height = image.getHeight();
 
         Random rand = new Random();
-        xSpeed=rand.nextInt(4);
-        ySpeed=rand.nextInt(4);//先随机初始化一个速度
-        x = rand.nextInt(Main.WIDTH - width);
-        y=rand.nextInt(Main.HEIGHT-height);
+        Speed=10;
+        oriX=x = rand.nextInt(Main.WIDTH - width);
+        oriY=y=rand.nextInt(Main.HEIGHT-height);//随机初始化位置
+        Tox=oriX+1;Toy=oriY+1;
 
         awardType = rand.nextInt(3);   //初始化时给奖励,三种类型
     }
@@ -29,17 +30,17 @@ public class Fruit extends FlyingObject{
 
     @Override
     public void step(){
+        if(x<Tox&&x+width>Tox&&y<Toy&&y+height>Toy){
+            Random rand =new Random();
+            Tox=rand.nextInt(20);
+            Toy=rand.nextInt(20);
+            oriX=x;oriY=y;
+        }
+        double xSpeed,ySpeed;
+        xSpeed=Speed*(Tox-oriX)/(Math.abs(Tox-oriX)+Math.abs(Toy-oriY));
+        ySpeed=Speed*(Toy-oriY)/(Math.abs(Tox-oriX)+Math.abs(Toy-oriY));
         x+=xSpeed;
         y+=ySpeed;
-
-        Random rand =new Random();
-        xSpeed=rand.nextInt(4);
-        ySpeed=rand.nextInt(4);
-        boolean direction=rand.nextBoolean();
-        if(direction==false||x>Main.WIDTH-width||y>Main.HEIGHT-height){
-            xSpeed=-xSpeed;
-            ySpeed=-ySpeed;
-        }
     }
 
 

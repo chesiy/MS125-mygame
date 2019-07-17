@@ -17,4 +17,12 @@ public class Monster extends Figure {
     public void step(){
         x+=speed;
     }
+
+    public Fire[] shoot(){
+        Fire[] fires=new Fire[8];//朝8个方向发子弹
+        for(int i=0;i<8;i++){
+            fires[i]=new Fire(x,y,i);
+        }
+        return fires;
+    }
 }
