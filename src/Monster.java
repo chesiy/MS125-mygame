@@ -1,5 +1,5 @@
 public class Monster extends Figure {
-    private int speed =-3;//怪是往左走的
+    private int speed =-2;//怪是往左走的
 
     public Monster(){
         this.image=Main.monster;
@@ -11,18 +11,23 @@ public class Monster extends Figure {
 
     @Override
     public boolean outOfBound(){
-        return x<0;
+        return x<-width;
     }
     @Override
     public void step(){
         x+=speed;
     }
 
-    public Fire[] shoot(){
-        Fire[] fires=new Fire[8];//朝8个方向发子弹
-        for(int i=0;i<8;i++){
+    public Fire[] shoot(Hero hero){
+        Fire[] fires=new Fire[5];//朝5个方向发子弹
+        for(int i=0;i<4;i++){
             fires[i]=new Fire(x,y,i);
         }
+        fires[4]=new Fire(x,y,hero.getX(),hero.getY());
         return fires;
+    }
+
+    public boolean attackBy(Heart heart){
+        return this.x<heart.x&&heart.x<this.x+width&&this.y<heart.y&&heart.y<this.y+height;
     }
 }

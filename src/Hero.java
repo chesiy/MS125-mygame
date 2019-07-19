@@ -10,12 +10,14 @@ public class Hero extends Figure{
 
     private int life;
     private int money;
-    private int firepower;//火力
+    public int firepower;//火力,可以放几次1技能
+    public int shieldnum;//盾牌数量
 
     public Hero(){
         life=3;
-        firepower=1;
+        firepower=5;
         money=100;
+        shieldnum=3;
         image=Main.hero0;//初始是hero0
         images=new BufferedImage[]{Main.hero0,Main.hero1};
         width=image.getWidth();
@@ -24,6 +26,7 @@ public class Hero extends Figure{
     }
 
     public void addLife(){life++;}
+    public void deleLife(){life--;}
     public int getLife(){return life;}
     public void setmoney(int mo){money=mo;}
     public int getMoney(){return money;}
@@ -39,7 +42,6 @@ public class Hero extends Figure{
             x+=xSpeed;
             y+=ySpeed;
         }
-      //  System.err.println(oriX+' '+oriY+' '+toY+' '+toX);
     }
 
     public Bullet[] shoot(){
@@ -47,15 +49,12 @@ public class Hero extends Figure{
         bullets[0]=new Bullet(x,y,sX,sY);
         return bullets;
     }
-    public void skill1(){//发射技能1
-
-    }
-
-    public void skill2(){//发射技能2
-
-    }
 
     public void skill3(){//发射技能3
+
+    }
+
+    public void skill4(){
 
     }
 

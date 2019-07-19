@@ -1,14 +1,12 @@
 import java.awt.Font;
 import java.awt.Color;
 import java.awt.Graphics;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.awt.image.BufferedImage;
-
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
@@ -38,12 +36,20 @@ public class Main extends JPanel {
     public static BufferedImage pause;
     public static BufferedImage gameover;
     public static BufferedImage fire;//怪物喷的火球
+    public static BufferedImage shield;
+    public static BufferedImage missile;
+    public static BufferedImage boss;
+    public static BufferedImage heart;//主人公4技能
 
     private Bullet[] bullets ={};//子弹数组
     private Hero myhero =new Hero();//主人公
     private Monster[] monsters={};//怪物数组
     private Fruit[] fruits={};//水果数组
     private Fire[] fires={};//火球数组
+    private Boss myboss=new Boss();
+    private Missile[] missiles={};//1技能的导弹
+    private Defenceobj myshield=new Defenceobj(myhero);
+    private Heart myheart=new Heart(myhero);
 
     static {
         try {
@@ -57,6 +63,10 @@ public class Main extends JPanel {
             pause=ImageIO.read(Main.class.getResource("pause.png"));
             gameover=ImageIO.read(Main.class.getResource("gameover.png"));
             fire=ImageIO.read(Main.class.getResource("fire.png"));
+            boss=ImageIO.read(Main.class.getResource("boss.png"));
+            shield=ImageIO.read(Main.class.getResource("shield.png"));
+            missile=ImageIO.read(Main.class.getResource("missile.png"));
+            heart=ImageIO.read(Main.class.getResource("heart.png"));
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -70,16 +80,19 @@ public class Main extends JPanel {
         paintBullets(g); // 画子弹
         paintMonsters(g);//画怪物
         paintFruit(g);//画水果
-        paintFire(g);
+        paintFire(g);//画火
+        paintBoss(g);
+        if(skill2_ready==true)paintShield(g);//盾存在的时间仅3s
+        if(skill4_ready==true)paintHeart(g);
+        paintMissile(g);
         paintScore(g); // 画分数
         paintState(g); // 画游戏状态
     }
-    /** 画主人公 */
+
     public void paintHero(Graphics g) {
         g.drawImage(myhero.getImage(), myhero.getX(), myhero.getY(), null);
     }
 
-    /** 画子弹 */
     public void paintBullets(Graphics g) {
         for (int i = 0; i < bullets.length; i++) {
             Bullet b = bullets[i];
@@ -105,8 +118,24 @@ public class Main extends JPanel {
             g.drawImage(fir.image,(int)fir.getX(),(int)fir.getY(),null);
         }
     }
+    public void paintBoss(Graphics g){
+        g.drawImage(myboss.getImage(),myboss.getX(),myboss.getY(),null);
+    }
 
-    /** 画分数 */
+    public void paintShield(Graphics g){
+        g.drawImage(myshield.getImage(),myshield.getX(),myshield.getY(), null);
+    }
+
+    public void paintHeart(Graphics g){
+        g.drawImage(myheart.getImage(),myheart.getX(),myheart.getY(), null);
+    }
+    public void paintMissile(Graphics g){
+        for(int i=0;i<missiles.length;i++){
+            Missile miss=missiles[i];
+            g.drawImage(miss.image,(int)miss.getX(),(int)miss.getY(),null);
+        }
+    }
+
     public void paintScore(Graphics g) {
         int x = 10; // x坐标
         int y = 25; // y坐标
@@ -116,6 +145,12 @@ public class Main extends JPanel {
         g.drawString("SCORE:" + score, x, y); // 画分数
         y=y+20; // y坐标增20
         g.drawString("LIFE:" + myhero.getLife(), x, y); // 画命
+        y+=25;
+        g.drawString("FIRE POWER:"+myhero.firepower,x,y);
+        x=WIDTH-250;
+        y=25;
+        g.drawString("BOSS BLOOD:"+myboss.getBlood(),x,y);
+
     }
 
     /** 画游戏状态 */
@@ -188,18 +223,52 @@ public class Main extends JPanel {
                         }
                         break;
                     case GAME_OVER: // 游戏结束，清理现场
-                    //    monsters= new Monster[0]; // 清空飞行物
+                        monsters= new Monster[0]; // 清空飞行物
                         bullets = new Bullet[0]; // 清空子弹
                         myhero = new Hero(); // 重新创建主人公
+                        myboss = new Boss();
+                        fires = new Fire[0];
                         fruits =new Fruit[0];//清空水果
                         score = 0; // 清空成绩
                         state = START; // 状态设置为启动
                         break;
                 }
             }
+
+        };
+        KeyAdapter k=new KeyAdapter() {
+            @Override
+            public void keyReleased(KeyEvent e) {
+                super.keyReleased(e);
+                char ch=e.getKeyChar();
+                System.err.println(ch+' ');
+                if(ch=='Q'||ch=='q'){
+                    //英雄1技能，追踪boss
+                    if(myhero.firepower>0){//英雄的火力值！！！！
+                        skill1_ready=true;
+                        myhero.firepower--;
+                    }
+                }
+                if(ch=='W'||ch=='w'){
+                     //英雄2技能，盾牌
+                     skill2_ready=true;
+                }
+                if(ch=='E'||ch=='e'){
+                    //英雄3技能，冷冻火焰
+                     skill3_ready=true;
+                }
+                if(ch=='R'||ch=='r'){
+                    //英雄4技能，金刚罩，对一圈的怪物造成伤害
+                    if(myhero.firepower>0){
+                        skill4_ready=true;
+                    }
+                }
+            }
         };
         this.addMouseListener(l); // 处理鼠标点击操作
         this.addMouseMotionListener(l); // 处理鼠标滑动操作
+        this.requestFocus();
+        this.addKeyListener(k);
 
         timer=new Timer();//主流程控制
         timer.schedule(new TimerTask() {
@@ -210,6 +279,7 @@ public class Main extends JPanel {
                     stepAction(); // 走一步
                     shootAction();//打
                     bangAction(); // 子弹打飞行物
+                    defenceAction();//盾
                     outOfBoundsAction(); // 删除越界飞行物及子弹
                     checkGameOverAction(); // 检查游戏结束
                 }
@@ -254,8 +324,54 @@ public class Main extends JPanel {
             }
         }
         myhero.step();
+        myboss.step();
+        myshield.step(myhero);
+        myheart.step(myhero);
     }
+
+    boolean skill3_ready=false;
+    boolean freezing=false;
+    int skill3_index=0;
+
+    boolean skill2_ready=false;
+    boolean under_defence=false;
+    int skill2_index=0;
+
+    boolean skill4_ready=false;
+    boolean under_cover=false;
+    int skill4_index=0;
+
+    public void defenceAction(){
+        if(skill2_ready==true){
+            skill2_index++;
+            if(skill2_index%300==0){
+                under_defence=false;
+                skill2_ready=false;
+            }
+            else under_defence=true;
+        }
+        if(skill3_ready==true){
+            skill3_index++;
+            if(skill3_index%300==0){
+                freezing=false;
+                skill3_ready=false;
+            }
+            else {
+                freezing=true;
+            }
+        }
+        if(skill4_ready==true){
+            skill4_index++;
+            if(skill4_index%200==0){
+                skill4_ready=false;
+                under_cover=false;
+            }
+            else under_cover=true;
+        }
+    }
+
     boolean ifshoot=false;
+    boolean skill1_ready=false;
     public void shootAction(){
         if(ifshoot){//主人公点一下右键发一颗子弹
             Bullet[] bs=myhero.shoot();
@@ -268,14 +384,28 @@ public class Main extends JPanel {
             bullets[i].step();
         }
 
-        //怪物一直朝8个方向放火球
+        //怪物一直放火球
         if(monsterindex%200==0) {
-            Fire[] fs = monsters[monsters.length - 1].shoot();
+            Fire[] fs = monsters[monsters.length - 1].shoot(myhero);
             fires = Arrays.copyOf(fires, fires.length + fs.length);
             System.arraycopy(fs, 0, fires, fires.length - fs.length, fs.length);
         }
-        for (int i = 0; i < fires.length; i++) {
-            fires[i].step();
+        if(!freezing){
+            for (int i = 0; i < fires.length; i++) {
+                fires[i].step();
+            }
+        }
+
+        //主人公发1技能导弹
+        if(skill1_ready){
+            Missile[] ms=new Missile[1];
+            ms[0]=new Missile(myhero,myboss);
+            missiles=Arrays.copyOf(missiles,missiles.length+ms.length);
+            System.arraycopy(ms,0,missiles,missiles.length-ms.length,ms.length);
+            skill1_ready=false;
+        }
+        for(int i=0;i<missiles.length;i++){
+            missiles[i].step();
         }
     }
 
@@ -283,20 +413,96 @@ public class Main extends JPanel {
     public void bangAction(){
         for(int i=0;i<bullets.length;i++){//检查子弹是否碰到怪和水果
             Bullet b=bullets[i];
-            bangmonster(b);
-            bangfruit(b);
+            if(bangmonster(b)||bangfruit(b)||bangboss(b)){
+                Bullet tmp=bullets[i];
+                bullets[i]=bullets[bullets.length-1];
+                bullets[bullets.length-1]=tmp;
+                bullets=Arrays.copyOf(bullets,bullets.length-1);
+                break;//把打到怪和水果的子弹删了
+            }
         }
-        //检测主人公是否碰到怪和怪发出的技能
+        //检测主人公是否碰到怪发出的技能
+        for(int i=0;i<fires.length;i++){
+            Fire fi=fires[i];
+            if(banghero(fi)){//击中了英雄
+                Fire tmp=fires[fires.length-1];
+                fires[fires.length-1]=fi;
+                fires[i]=tmp;
+                fires=Arrays.copyOf(fires,fires.length-1);
+            }
+        }
+
+        //检测boss是否碰到主人公4技能
+        for(int i=0;i<missiles.length;i++){
+            Missile mi=missiles[i];
+            if(bangboss(mi)){
+                Missile tmp=missiles[i];
+                missiles[i]=missiles[missiles.length-1];
+                missiles[missiles.length-1]=tmp;
+                missiles=Arrays.copyOf(missiles,missiles.length-1);
+                break;
+            }
+        }
+
+        //检测boss和monster是否碰到主人公4技能
+        if(skill4_ready==true){
+            if(bangboss(myheart)){
+                score+=30;
+            }
+            for(int i=0;i<monsters.length;i++){
+                if(bangmonster(myheart)){
+                    score+=20;
+                }
+            }
+        }
+
     }
     public void outOfBoundsAction(){
-
+        int index=0;
+        Monster[] monsterlives=new Monster[monsters.length];
+        for(int i=0;i<monsters.length;i++){
+            Monster mon=monsters[i];
+            if(!mon.outOfBound()){
+                monsterlives[index++]=mon;
+            }
+        }
+        monsters=Arrays.copyOf(monsterlives,index);
+        index=0;
+        Bullet[] bulletexits=new Bullet[bullets.length];
+        for(int i=0;i<bullets.length;i++){
+            Bullet bul=bullets[i];
+            if(!bul.outOfBounds()){
+                bulletexits[index++]=bul;
+            }
+        }
+        bullets=Arrays.copyOf(bulletexits,index);
+        index=0;
+        Missile[] missileexits=new Missile[missiles.length];
+        for(int i=0;i<missiles.length;i++){
+            Missile mis=missiles[i];
+            if(!mis.outOfBounds()){
+                missileexits[index++]=mis;
+            }
+        }
+        missiles=Arrays.copyOf(missileexits,index);
+        index=0;
+        Fire[] fireexits=new Fire[fires.length];
+        for(int i=0;i<fires.length;i++){
+            Fire fi=fires[i];
+            if(!fi.outOfBounds()){
+                fireexits[index++]=fi;
+            }
+        }
+        fires=Arrays.copyOf(fireexits,index);
     }
 
     public void checkGameOverAction(){
-
+        if(myhero.getLife()<=0){
+            state=GAME_OVER;
+        }
     }
 
-    public void bangmonster(Bullet bullet){//现在只看怪有没有被打到，不看水果
+    public boolean bangmonster(Bullet bullet){//现在只看怪有没有被打到，不看水果
         int index=-1;
         for (int i=0;i<monsters.length;i++){//之后要写通过边界检查删掉出界monster！！！
             Monster obj=monsters[i];
@@ -307,13 +513,53 @@ public class Main extends JPanel {
         }
         if(index!=-1){//有击中怪
             monsters=Arrays.copyOf(monsters,monsters.length-1);//删掉这个怪
-            int tmp=myhero.getMoney()+20;
-            myhero.setmoney(tmp);//打中怪加20分
-            score+=20;
+            score+=20;//打中怪加20分
+            return true;
         }
+        return false;
     }
 
-    public void bangfruit(Bullet bullet){
+    public boolean bangmonster(Heart heart){
+        int index=-1;
+        for (int i=0;i<monsters.length;i++){//之后要写通过边界检查删掉出界monster！！！
+            Monster obj=monsters[i];
+            if(obj.attackBy(heart)){//判断是否击中
+                index=i;
+                break;
+            }
+        }
+        if(index!=-1){//有击中怪
+            monsters=Arrays.copyOf(monsters,monsters.length-1);//删掉这个怪
+            score+=20;//打中怪加20分
+            return true;
+        }
+        return false;
+    }
+
+    public boolean bangboss(Missile missile){
+        if(myboss.shootBy(missile)){
+            myboss.lose_blood(20);
+            return true;
+        }
+        return false;
+    }
+    public boolean bangboss(Heart heart){
+        if(myboss.attackBy(heart)){
+            myboss.lose_blood(15);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean bangboss(Bullet bullet){
+        if(myboss.shootBy(bullet)){
+            myboss.lose_blood(10);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean bangfruit(Bullet bullet){
         int index=-1;
         for(int i=0;i<fruits.length;i++){
             Fruit fruit=fruits[i];
@@ -329,11 +575,18 @@ public class Main extends JPanel {
 
             fruits=Arrays.copyOf(fruits,fruits.length-1);
             myhero.addLife();
+            return true;
         }
+        return false;
     }
 
-    public void banghero(Fire fire){//检查火球有没有撞上主人公,扣血
-
+    public boolean  banghero(Fire fire){//检查火球有没有撞上主人公,扣血
+        if(myhero.shootBy(fire)&&!under_defence){
+            myhero.deleLife();
+            return true;
+        }
+        else if(myhero.shootBy(fire))return true;
+        return false;
     }
 
     public void H_bang_M(Hero hero){//检查主人公有没有撞上怪物，减命

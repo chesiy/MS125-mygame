@@ -53,6 +53,10 @@ public abstract class FlyingObject {//果子和子弹
         return this.x<bul.x&&bul.x<this.x+width&&this.y<bul.y&&bul.y<this.y+height;
     }
 
+    public boolean shootBy(Fire fir){
+        return this.x<fir.x&&fir.x<this.x+width&&this.y<fir.y&&fir.y<this.y+height;
+    }
+
 
     //检查是否出界
     public abstract boolean outOfBounds();

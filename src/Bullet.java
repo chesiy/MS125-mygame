@@ -21,6 +21,9 @@ public class Bullet  extends FlyingObject{
     }
     @Override
     public boolean outOfBounds(){
-        return x>width;
+        if(x>-width&&x<Main.WIDTH&&y>-height&&y<Main.HEIGHT){
+            return false;
+        }
+        return true;
     }
 }
