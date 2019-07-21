@@ -28,7 +28,6 @@ public class Fire extends FlyingObject{
         }
         return true;
     }
-
     @Override
     public void step() {
         switch(type){
@@ -44,11 +43,11 @@ public class Fire extends FlyingObject{
             case 3:
                 xSpeed=0;ySpeed=-speed;
                 break;
+            case 4:
+                xSpeed=speed/1.4;ySpeed=-speed/1.4;
             default:break;
         }
         x+=xSpeed;
         y+=ySpeed;
     }
-
-
 }

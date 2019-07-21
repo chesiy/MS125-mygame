@@ -15,7 +15,7 @@ public class Hero extends Figure{
 
     public Hero(){
         life=3;
-        firepower=5;
+        firepower=3;
         money=100;
         shieldnum=3;
         image=Main.hero0;//初始是hero0
@@ -28,19 +28,21 @@ public class Hero extends Figure{
     public void addLife(){life++;}
     public void deleLife(){life--;}
     public int getLife(){return life;}
-    public void setmoney(int mo){money=mo;}
-    public int getMoney(){return money;}
 
     @Override
-    public boolean outOfBound(){return false;}
+    public boolean outOfBound(){
+        return false;
+    }
 
     @Override
     public void step(){
         if(!(x<toX&&x+width>toX&&y<toY&&y+height>toY)){
             double xSpeed=(double)8*(toX-oriX)/(Math.abs(toX-oriX)+Math.abs(toY-oriY));
             double ySpeed=(double)8*(toY-oriY)/(Math.abs(toX-oriX)+Math.abs(toY-oriY));
-            x+=xSpeed;
-            y+=ySpeed;
+            if(!((x+xSpeed)>Main.WIDTH||(y+ySpeed)>Main.HEIGHT||(x+xSpeed)<0||(y+ySpeed)<0)){
+                x+=xSpeed;
+                y+=ySpeed;
+            }
         }
     }
 
@@ -48,14 +50,6 @@ public class Hero extends Figure{
         Bullet []bullets=new Bullet[1];
         bullets[0]=new Bullet(x,y,sX,sY);
         return bullets;
-    }
-
-    public void skill3(){//发射技能3
-
-    }
-
-    public void skill4(){
-
     }
 
     /***碰撞算法***/
@@ -71,10 +65,5 @@ public class Hero extends Figure{
 
         return herox>x1 && herox<x2 && heroy>y1 && heroy<y2;   //区间范围内为撞上了
     }
-
-
-
-
-
 
 }

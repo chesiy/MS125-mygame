@@ -2,12 +2,10 @@ import java.util.Random;
 
 public class Fruit extends FlyingObject{
     private double Speed;
-    private int awardType;//1-奖励money；2-奖励life；3-奖励火力
     private double Tox,Toy;
     private double oriX,oriY;
 
     public Fruit(){
-
         this.image=Main.fruit;
         width= image.getWidth();
         height = image.getHeight();
@@ -17,11 +15,7 @@ public class Fruit extends FlyingObject{
         oriX=x = rand.nextInt(Main.WIDTH - width);
         oriY=y=rand.nextInt(Main.HEIGHT-height);//随机初始化位置
         Tox=oriX+1;Toy=oriY+1;
-
-        awardType = rand.nextInt(3);   //初始化时给奖励,三种类型
     }
-
-    public int getAwardType(){return awardType;}
 
     @Override
     public boolean outOfBounds() {

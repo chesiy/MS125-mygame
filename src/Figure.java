@@ -57,7 +57,6 @@ public abstract class Figure {
     public boolean shootBy(Missile mis){
         return this.x<mis.x&&mis.x<this.x+width&&this.y<mis.y&&mis.y<this.y+height;
     }
-
     public boolean shootBy(Fire fir){
         return this.x<fir.x&&fir.x<this.x+width&&this.y<fir.y&&fir.y<this.y+height;
     }

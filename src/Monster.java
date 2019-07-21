@@ -19,11 +19,12 @@ public class Monster extends Figure {
     }
 
     public Fire[] shoot(Hero hero){
-        Fire[] fires=new Fire[5];//朝5个方向发子弹
-        for(int i=0;i<4;i++){
+        Fire[] fires=new Fire[6];//朝5个方向发子弹
+        for(int i=0;i<5;i++){
             fires[i]=new Fire(x,y,i);
         }
-        fires[4]=new Fire(x,y,hero.getX(),hero.getY());
+        fires[5]=new Fire(x,y,hero.getX(),hero.getY());
+
         return fires;
     }
 

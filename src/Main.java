@@ -21,6 +21,7 @@ public class Main extends JPanel {
     private static final int RUNNING = 1;
     private static final int PAUSE = 2;
     private static final int GAME_OVER = 3;
+    private static final int WIN=4;
 
     private int score = 0; // 得分
     private Timer timer; // 定时器
@@ -40,6 +41,8 @@ public class Main extends JPanel {
     public static BufferedImage missile;
     public static BufferedImage boss;
     public static BufferedImage heart;//主人公4技能
+    public static BufferedImage blood;//boss的血条
+    private static BufferedImage win;
 
     private Bullet[] bullets ={};//子弹数组
     private Hero myhero =new Hero();//主人公
@@ -50,11 +53,12 @@ public class Main extends JPanel {
     private Missile[] missiles={};//1技能的导弹
     private Defenceobj myshield=new Defenceobj(myhero);
     private Heart myheart=new Heart(myhero);
+    private Blood bossblood=new Blood(myboss);
 
     static {
         try {
             background=ImageIO.read(Main.class.getResource("background.JPG"));
-         //   start=ImageIO.read(Main.class.getResource("start.JPG"));
+            start=ImageIO.read(Main.class.getResource("start.png"));
             monster=ImageIO.read(Main.class.getResource("monster.png"));
             fruit=ImageIO.read(Main.class.getResource("fruit.png"));
             bullet=ImageIO.read(Main.class.getResource("bullet.png"));
@@ -67,6 +71,9 @@ public class Main extends JPanel {
             shield=ImageIO.read(Main.class.getResource("shield.png"));
             missile=ImageIO.read(Main.class.getResource("missile.png"));
             heart=ImageIO.read(Main.class.getResource("heart.png"));
+            blood=ImageIO.read(Main.class.getResource("bossblood.png"));
+            win=ImageIO.read(Main.class.getResource("win.png"));
+
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -82,7 +89,8 @@ public class Main extends JPanel {
         paintFruit(g);//画水果
         paintFire(g);//画火
         paintBoss(g);
-        if(skill2_ready==true)paintShield(g);//盾存在的时间仅3s
+        paintBossblood(g);
+        if(under_defence==true)paintShield(g);//盾存在的时间仅3s
         if(skill4_ready==true)paintHeart(g);
         paintMissile(g);
         paintScore(g); // 画分数
@@ -120,6 +128,10 @@ public class Main extends JPanel {
     }
     public void paintBoss(Graphics g){
         g.drawImage(myboss.getImage(),myboss.getX(),myboss.getY(),null);
+    }
+
+    public void paintBossblood(Graphics g){
+        g.drawImage(bossblood.image,bossblood.getX(),bossblood.getY(),null);
     }
 
     public void paintShield(Graphics g){
@@ -162,6 +174,9 @@ public class Main extends JPanel {
             case PAUSE: // 暂停状态
                 g.drawImage(pause, 0, 0, null);
                 break;
+            case WIN: //打死boss，胜利了
+                g.drawImage(win,0,0,null);
+                break;
             case GAME_OVER: // 游戏终止状态
                 g.drawImage(gameover, 0, 0, null);
                 break;
@@ -203,7 +218,7 @@ public class Main extends JPanel {
                 }
             }
             @Override
-            public void mouseClicked(MouseEvent e) { // 鼠标点击
+            public void mouseReleased(MouseEvent e) { // 鼠标点击
                 switch (state) {
                     case START:
                         state = RUNNING; // 启动状态下运行
@@ -222,6 +237,7 @@ public class Main extends JPanel {
                             myhero.sY= e.getY();
                         }
                         break;
+                    case WIN:
                     case GAME_OVER: // 游戏结束，清理现场
                         monsters= new Monster[0]; // 清空飞行物
                         bullets = new Bullet[0]; // 清空子弹
@@ -229,6 +245,22 @@ public class Main extends JPanel {
                         myboss = new Boss();
                         fires = new Fire[0];
                         fruits =new Fruit[0];//清空水果
+                        missiles=new Missile[0];
+                        fruitnum=0;
+                        monsterindex=0;
+                        fruitindex=0;
+                        skill3_ready=false;
+                        freezing=false;
+                        skill3_index=0;
+
+                        skill2_ready=false;
+                        under_defence=false;
+                        skill2_index=0;
+
+                        skill4_ready=false;
+                        under_cover=false;
+                        skill4_index=0;
+                        shieldindex=0;
                         score = 0; // 清空成绩
                         state = START; // 状态设置为启动
                         break;
@@ -251,7 +283,7 @@ public class Main extends JPanel {
                 }
                 if(ch=='W'||ch=='w'){
                      //英雄2技能，盾牌
-                     skill2_ready=true;
+                    skill2_ready=true;
                 }
                 if(ch=='E'||ch=='e'){
                     //英雄3技能，冷冻火焰
@@ -261,6 +293,7 @@ public class Main extends JPanel {
                     //英雄4技能，金刚罩，对一圈的怪物造成伤害
                     if(myhero.firepower>0){
                         skill4_ready=true;
+                        myhero.firepower--;
                     }
                 }
             }
@@ -300,6 +333,7 @@ public class Main extends JPanel {
              monsters=Arrays.copyOf(monsters,monsters.length+1);
              monsters[monsters.length-1]=obj;
         }
+
         if(fruitnum<3){
             fruitnum++;
             Fruit obj0=new Fruit();
@@ -327,6 +361,7 @@ public class Main extends JPanel {
         myboss.step();
         myshield.step(myhero);
         myheart.step(myhero);
+        bossblood.step(myboss);
     }
 
     boolean skill3_ready=false;
@@ -341,15 +376,21 @@ public class Main extends JPanel {
     boolean under_cover=false;
     int skill4_index=0;
 
+    int shieldindex=0;//每5s才能发一次盾牌技能
     public void defenceAction(){
-        if(skill2_ready==true){
+        shieldindex++;
+   //     System.err.printf("[O]shieldindex:%d\n", shieldindex);
+        if(skill2_ready==true&&shieldindex>=500){
             skill2_index++;
+ //           System.err.printf("shieldindex:%d, skill2_idx:%d\n", shieldindex, skill2_index);
             if(skill2_index%300==0){
                 under_defence=false;
                 skill2_ready=false;
+                shieldindex=0;
             }
             else under_defence=true;
         }
+
         if(skill3_ready==true){
             skill3_index++;
             if(skill3_index%300==0){
@@ -385,7 +426,7 @@ public class Main extends JPanel {
         }
 
         //怪物一直放火球
-        if(monsterindex%200==0) {
+        if(monsterindex%150==0&&monsterindex>=200&&monsters.length > 0) {
             Fire[] fs = monsters[monsters.length - 1].shoot(myhero);
             fires = Arrays.copyOf(fires, fires.length + fs.length);
             System.arraycopy(fs, 0, fires, fires.length - fs.length, fs.length);
@@ -500,6 +541,9 @@ public class Main extends JPanel {
         if(myhero.getLife()<=0){
             state=GAME_OVER;
         }
+        if(myboss.getBlood()<=0){
+            state=WIN;
+        }
     }
 
     public boolean bangmonster(Bullet bullet){//现在只看怪有没有被打到，不看水果
@@ -553,7 +597,7 @@ public class Main extends JPanel {
 
     public boolean bangboss(Bullet bullet){
         if(myboss.shootBy(bullet)){
-            myboss.lose_blood(10);
+            myboss.lose_blood(3);
             return true;
         }
         return false;
@@ -589,9 +633,6 @@ public class Main extends JPanel {
         return false;
     }
 
-    public void H_bang_M(Hero hero){//检查主人公有没有撞上怪物，减命
-
-    }
 
 
 }
