@@ -42,7 +42,8 @@ public class Main extends JPanel {
     public static BufferedImage boss;
     public static BufferedImage heart;//主人公4技能
     public static BufferedImage blood;//boss的血条
-    private static BufferedImage win;
+    public static BufferedImage win;
+
 
     private Bullet[] bullets ={};//子弹数组
     private Hero myhero =new Hero();//主人公
@@ -54,6 +55,7 @@ public class Main extends JPanel {
     private Defenceobj myshield=new Defenceobj(myhero);
     private Heart myheart=new Heart(myhero);
     private Blood bossblood=new Blood(myboss);
+    private int HighestScore=0;
 
     static {
         try {
@@ -167,6 +169,10 @@ public class Main extends JPanel {
 
     /** 画游戏状态 */
     public void paintState(Graphics g) {
+        Font font = new Font(Font.SANS_SERIF, Font.BOLD, 30); // 字体
+        g.setColor(new Color(0xFF3D36));
+        g.setFont(font); // 设置字体
+
         switch (state) {
             case START: // 启动状态
                 g.drawImage(start, 0, 0, null);
@@ -176,9 +182,19 @@ public class Main extends JPanel {
                 break;
             case WIN: //打死boss，胜利了
                 g.drawImage(win,0,0,null);
+                int x1=400,y1=200;
+                g.drawString("YOUR SCORE:"+score,x1,y1);
+                if(score>HighestScore)HighestScore=score;
+                x1=400;y1=150;
+                g.drawString("Highest Score:"+HighestScore,x1,y1);
                 break;
             case GAME_OVER: // 游戏终止状态
+                int x2=400,y2=200;
                 g.drawImage(gameover, 0, 0, null);
+                g.drawString("YOUR SCORE:"+score,x2,y2);
+                if(score>HighestScore)HighestScore=score;
+                x2=400;y2=150;
+                g.drawString("Highest Score:"+HighestScore,x2,y2);
                 break;
         }
     }
@@ -377,6 +393,7 @@ public class Main extends JPanel {
     int skill4_index=0;
 
     int shieldindex=0;//每5s才能发一次盾牌技能
+
     public void defenceAction(){
         shieldindex++;
    //     System.err.printf("[O]shieldindex:%d\n", shieldindex);
@@ -403,7 +420,7 @@ public class Main extends JPanel {
         }
         if(skill4_ready==true){
             skill4_index++;
-            if(skill4_index%200==0){
+            if(skill4_index%50==0){//0.5s就消失了
                 skill4_ready=false;
                 under_cover=false;
             }
@@ -426,7 +443,7 @@ public class Main extends JPanel {
         }
 
         //怪物一直放火球
-        if(monsterindex%150==0&&monsterindex>=200&&monsters.length > 0) {
+        if(monsterindex%100==0&&monsterindex>=200&&monsters.length > 0) {
             Fire[] fs = monsters[monsters.length - 1].shoot(myhero);
             fires = Arrays.copyOf(fires, fires.length + fs.length);
             System.arraycopy(fs, 0, fires, fires.length - fs.length, fs.length);
@@ -462,7 +479,7 @@ public class Main extends JPanel {
                 break;//把打到怪和水果的子弹删了
             }
         }
-        //检测主人公是否碰到怪发出的技能
+        //检测主人公是否碰到怪发出的火球
         for(int i=0;i<fires.length;i++){
             Fire fi=fires[i];
             if(banghero(fi)){//击中了英雄
@@ -473,10 +490,11 @@ public class Main extends JPanel {
             }
         }
 
-        //检测boss是否碰到主人公4技能
+        //检测boss是否碰到主人公1技能
         for(int i=0;i<missiles.length;i++){
             Missile mi=missiles[i];
             if(bangboss(mi)){
+                score+=30;
                 Missile tmp=missiles[i];
                 missiles[i]=missiles[missiles.length-1];
                 missiles[missiles.length-1]=tmp;
@@ -486,13 +504,15 @@ public class Main extends JPanel {
         }
 
         //检测boss和monster是否碰到主人公4技能
+
         if(skill4_ready==true){
             if(bangboss(myheart)){
-                score+=30;
+                skill4_index++;
+                score+=3;
             }
             for(int i=0;i<monsters.length;i++){
                 if(bangmonster(myheart)){
-                    score+=20;
+                    score+=2;
                 }
             }
         }
@@ -574,7 +594,6 @@ public class Main extends JPanel {
         }
         if(index!=-1){//有击中怪
             monsters=Arrays.copyOf(monsters,monsters.length-1);//删掉这个怪
-            score+=20;//打中怪加20分
             return true;
         }
         return false;
@@ -589,7 +608,7 @@ public class Main extends JPanel {
     }
     public boolean bangboss(Heart heart){
         if(myboss.attackBy(heart)){
-            myboss.lose_blood(15);
+            myboss.lose_blood(1);
             return true;
         }
         return false;
@@ -598,6 +617,7 @@ public class Main extends JPanel {
     public boolean bangboss(Bullet bullet){
         if(myboss.shootBy(bullet)){
             myboss.lose_blood(3);
+            score+=20;//平A打到boss分数加20
             return true;
         }
         return false;

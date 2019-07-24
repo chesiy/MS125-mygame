@@ -29,6 +29,6 @@ public class Monster extends Figure {
     }
 
     public boolean attackBy(Heart heart){
-        return this.x<heart.x&&heart.x<this.x+width&&this.y<heart.y&&heart.y<this.y+height;
+        return heart.x<this.x&&this.x<heart.x+heart.width&&heart.y<this.y&&this.y<heart.y+heart.width;
     }
 }

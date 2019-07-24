@@ -36,7 +36,7 @@ public class Boss extends Figure{//上下飞，一边发射攻击，每过10s寻
     }
 
     public boolean attackBy(Heart heart){
-        return this.x<heart.x&&heart.x<this.x+width&&this.y<heart.y&&heart.y<this.y+height;
+        return heart.x<this.x&&this.x<heart.x+heart.width&&heart.y<this.y&&this.y<heart.y+heart.width;
     }
 
 

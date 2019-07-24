@@ -9,14 +9,12 @@ public class Hero extends Figure{
     public double sX,sY;//子弹射向哪里
 
     private int life;
-    private int money;
     public int firepower;//火力,可以放几次1技能
     public int shieldnum;//盾牌数量
 
     public Hero(){
         life=3;
         firepower=3;
-        money=100;
         shieldnum=3;
         image=Main.hero0;//初始是hero0
         images=new BufferedImage[]{Main.hero0,Main.hero1};
